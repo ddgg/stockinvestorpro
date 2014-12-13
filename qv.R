@@ -1,19 +1,4 @@
-dbdir <- '/home/zouxf/sip/20141205/'
-bs <- read.csv(paste(dbdir, 'BS.ANN.TXT', sep=""), header=F, stringsAsFactors=FALSE, na.strings="unknown")
-keys <- read.csv(paste(dbdir, 'BS.ANN_Key.TXT', sep=""), header=F, stringsAsFactors=FALSE, na.strings="unknown")
-names(bs) <- as.vector(keys[,1])
-
-income <- read.csv(paste(dbdir, 'IS.ANN.TXT', sep=""), header=F, stringsAsFactors=FALSE, na.strings="unknown")
-keys <- read.csv(paste(dbdir, 'IS.ANN_Key.TXT', sep=""), header=F, stringsAsFactors=FALSE, na.strings="unknown")
-names(income) <- as.vector(keys[,1])
-
-scf <- read.csv(paste(dbdir, 'CF.TXT', sep=""), header=F, stringsAsFactors=FALSE, na.strings="unknown")
-keys <- read.csv(paste(dbdir, 'CF_Key.TXT', sep=""), header=F, stringsAsFactors=FALSE, na.strings="unknown")
-names(scf) <- as.vector(keys[,1])
-
-tmp <- merge(bs,income,by='TICKER')
-fs <- merge(tmp, scf, by='TICKER')
-fs <- subset(fs, MKTCAP>=1000)
+qs <- dget('fs.R')
 ocollen <- length(colnames(fs))
 
 qv <- within(fs, {
