@@ -1,6 +1,6 @@
 # process stock invester pro updates exe
 
-This is the program I used to automatically process sip installshield files from aaii.com, the target is to automatically extract dbf from sip update installshield exe, and import into database.
+This is the steps I used to automatically process sip installshield files from aaii.com, the target is to automatically extract dbf from sip update installshield exe, and import into database.
 
 ##Enviroment:
 
@@ -14,14 +14,14 @@ This is the program I used to automatically process sip installshield files from
 > http://unattended.sourceforge.net/installers.php
  
 ### what working as Feb 2015
-
+> unshield
 #### for old files before 20110729
 installshield version before 12:
 
 use winecfg to map Z to target dir
 
-```
 ~~echo \x13|WINEPREFIX=~/win32/ wine ../isxunpack.exe install.exe~~
+```
 wine proinstall_20110722.exe /extract_all:"Z:\\"
 cd Disk1
 unshild x data1.cab
@@ -33,5 +33,4 @@ unshild x data1.cab
 thanks to https://github.com/twogood/unshield
 
 unshield now work perfectly for all the installshield version
-```
 
