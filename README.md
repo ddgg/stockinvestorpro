@@ -21,22 +21,17 @@ installshield version before 12:
 use winecfg to map Z to target dir
 
 ```
-#echo \x13|WINEPREFIX=~/win32/ wine ../isxunpack.exe install.exe
+~~echo \x13|WINEPREFIX=~/win32/ wine ../isxunpack.exe install.exe~~
 wine proinstall_20110722.exe /extract_all:"Z:\\"
 cd Disk1
 unshild x data1.cab
 ```
+~~not working:~~
+~~since `proinstall_20110729.exe` and all newer files `stockinvestorinstall_yyyymmdd.exe`~~
+~~installshield version 17 18 19~~
 
-not working:
-since `proinstall_20110729.exe` and all newer files `stockinvestorinstall_yyyymmdd.exe`
-installshield version 17 18 19
-create a template response file, result setup.iss in `~/win32/drive_c/windows` directory
-```
-WINEPREFIX=~/win32/ wine proinstall\_20110729.exe /r
-cp ~/win32/drive_c/windows/setup.iss .
-```
-test respond file
-```
-WINEPREFIX=~/win32/ wine proinstall\_20110729.exe /s /r /sms
+thanks to https://github.com/twogood/unshield
+
+unshield now work perfectly for all the installshield version
 ```
 
