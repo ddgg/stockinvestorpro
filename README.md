@@ -1,3 +1,26 @@
+# dbf schema
+## Static_Data_Files
+
+here store the concerned fundametal data
+
+* si_ci.dbf company info, company code, ticker, name address etc
+* si_date.dbf exact date of the period Y1, Y2 ... Y7 etc
+* si_bsa.dbf annual balance sheet
+* si_bsq.dbf quarterly balance sheet
+* si_cfa.dbf annually cash flow statement
+* si_cfq.dbf quarterly cash flow statement
+* SI_DOW.DBF dow index abbreviation code
+* SI_EXCHG.DBF exchange code
+* si_isa.dbf annually income statement
+* si_isq.dbf quauterly income statement
+* SI_MGDSC.DBF industry/sector code and description
+## Dynamic_Data_Files
+
+here store the price data files
+
+* si_psda.dbf yearly price data, including past 7 year end's price, high, low, volume
+* si_psdc.dbf monthly price data, past 120 month's closing price
+
 # process stock invester pro updates exe
 
 This is the steps I used to automatically process sip installshield files from aaii.com, the target is to automatically extract dbf from sip update installshield exe, and import into database.
@@ -33,4 +56,5 @@ unshild x data1.cab
 thanks to https://github.com/twogood/unshield
 
 unshield now work perfectly for all the installshield version
+
 
