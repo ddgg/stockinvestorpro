@@ -58,7 +58,7 @@ thanks to https://github.com/twogood/unshield
 unshield now work perfectly for all the installshield version
 
 #### 2015-05-19 version 17 single character problem
-proinstall_20110729 till 20120622 still has single character problem
+unshield proinstall_20110729 till 20120622 still has single character problem
 
 # history dbf to sqlite
 ## batch cp dbf to a directory tree
