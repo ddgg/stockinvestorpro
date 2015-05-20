@@ -58,7 +58,8 @@ thanks to https://github.com/twogood/unshield
 unshield now work perfectly for all the installshield version
 
 #### 2015-05-19 version 17 single character problem
-unshield proinstall_20110729 till 20120622 still has single character problem
+~~unshield proinstall_20110729 till 20120622 still has single character problem~~
+#### 20150520 version 17 single character problem solved after unshield update
 
 # history dbf to sqlite
 ## batch cp dbf to a directory tree
@@ -68,3 +69,18 @@ date as directory name
 for i in stockinvestorinstall_*; do ~/trade/sip/dbf2archive.sh $i;done
 ```
 
+for fullupdate files, the begining isxunpack report exceptions, so begin from backwards(latest files first)
+
+```
+for i in `ls -1 fullupdate200*|sort -r`; do ~/trade/sip/dbf2archive.sh $i;done
+```
+20070531 isxunpack raise exceptions, but after click 'show details', program continue
+
+22M     ./20030103
+22M     ./20050211
+22M     ./20051202
+85M     ./20060616
+118M    ./20070531
+119M    ./20061110
+
+these are the incomplete extractions and their size

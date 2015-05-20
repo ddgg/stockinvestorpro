@@ -4,14 +4,17 @@ workdir="$exedir/tmp"
 cabdir="$workdir/Disk1"
 exe="$exedir/$1"
 tmpname=${1##*_}
+fntype=0
 fdate=${tmpname%%.*}
-if [[ ! $fdate =~ [0-9]+$ ]]; then 
+if [[ ! $fdate =~ ^[0-9]+$ ]]; then 
     # for fullupdate20000101.exe format
-    tmpname=${1#*e}
-    fdate=${tmpname%%.*}
-    if [[ ! $fdate =~ [0-9]+$ ]]; then 
+    fdate=${fdate#*e}
+    echo "filename after process $fdate"
+    if [[ ! $fdate =~ ^[0-9]+$ ]]; then 
         echo "file name $1 $fdate error" >&2; 
         exit 1; 
+    else
+        fntype=1
     fi
 fi
 targetdir="/f/sip/$fdate/"
@@ -20,18 +23,26 @@ if [ -d $targetdir ]; then
     exit 1
 fi
 mkdir $targetdir
-rm -rf $workdir/*
+rm $workdir/1.exe
 cp $1 $workdir/1.exe
 cd $workdir
-wine 1.exe /extract_all:"Z:\\"
-if [ ! -d "$cabdir" ]; then
-    echo "unpack $exe failed" >&2
-    exit 1
+if [[ $fntype -eq 0 ]]; then
+    rm -rf $cabdir
+    echo "file name contains underscore"
+    wine 1.exe /extract_all:"Z:\\"
+    if [ ! -d "$cabdir" ]; then
+        echo "unpack $exe failed" >&2
+        exit 1
+    fi
+    cd $cabdir
+else
+    echo "no underscore in file name"
+    ls|grep -v 1.exe|grep -v isxunpack.exe|xargs rm -rf
+    echo \x13|wine isxunpack.exe 1.exe
 fi
-cd $cabdir
 unshield x data1.cab
-if [ ! -d "$cabdir/Static_Data_Files" ]; then
+if [[ $fntype -eq 0 && ! -d "$cabdir/Static_Data_Files" ]]; then
     echo "unshield error $exe" >&2
     exit 1
 fi
-find $cabdir -iname si*.dbf | xargs -I '{}' mv '{}' $targetdir
+find $workdir -iname si*.dbf | xargs -I '{}' mv '{}' $targetdir
