@@ -6,9 +6,10 @@ import os
 import sqlite3
 import argparse
 import re
-parser = argparse.ArgumentParser(description="read and convert DBF (dBASE) database files")
+parser = argparse.ArgumentParser(description="read and convert visual foxpro database files")
 group = parser.add_mutually_exclusive_group()
-group.add_argument("-f", "--fields", action="store_true", help="display field names")
+#group.add_argument("-f", "--fields", action="store_true", help="display field names")
+group.add_argument("-f", "--info", action="store_true", help="display dbf info")
 group.add_argument("-p", "--pretty", action="store_true", help="display pretty-printed table")
 group.add_argument("-t", "--table", action="store_true", help="display tab-separated table")
 group.add_argument("-d", "--dump", action="store_true", help="dump table")
@@ -16,7 +17,7 @@ group.add_argument("-s", "--sqlite", metavar='DB', help="write to sqlite databas
 parser.add_argument("-F", "--force", action="store_true", help="overwrites existing table in sqlite database")
 parser.add_argument("-v", "--verbose", action="store_true")
 parser.add_argument("-i", "--ignore-errors", action="store_true", help="tell DBF library to ignore typecasting errors")
-parser.add_argument('infiles', metavar='DBF', nargs='+', help="input files in dBASE (.DBF) format")
+parser.add_argument('infiles', metavar='DBF', nargs='+', help="input files in visual foxpro format")
 args = parser.parse_args()
 
 conn = None
@@ -49,25 +50,21 @@ def run(dbfName):
         for fldName in table.field_names:
             sys.stdout.write('%s\t'%(fldName))
         print table[1][1]
-        maxCounts = 0
-        for rec in table:
+        for rec in table[:min(2, len(table))]:
             for fldName in table.field_names:
                 sys.stdout.write('%s\t'%(rec[fldName]))
-            maxCounts += 1
-            if maxCounts > 3:
-                break
             print
             
     elif args.pretty:
-        out = [ table.fieldNames ]
-        for el in table:
-            out.append([ str(s).strip() for s in el ])
+        out = [ table.field_names ]
+#        for el in table:
+#            out.append([ str(s).encode('ascii', 'ignore').decode('ascii').strip() for s in el ])
         print_table(out)
         
     elif args.sqlite:
         netto_name = re.sub('[^A-Za-z0-9]', '_', dbfName).strip('_')
         print "Importing %s into table %s ..." % (dbfName, netto_name)
-        cr_stat = "CREATE TABLE `%s` (`%s`)" % (netto_name, '`,`'.join(table.fieldNames))
+        cr_stat = "CREATE TABLE `%s` (`%s`)" % (netto_name, '`,`'.join(table.field_names))
         if args.force: conn.execute('DROP TABLE IF EXISTS `%s` ' % (netto_name))
         try:
             conn.execute(cr_stat)
@@ -84,18 +81,12 @@ def run(dbfName):
         
     elif args.dump:
         print( "\t%s\t%s\t" % (os.path.getsize(dbfName),dbfName))
-        for i1 in range(min(3,len(table))):
-            rec = table[i1]
-            for fldName in table.fieldNames:
+        for rec in table[:min(3,len(table))]:
+            for fldName in table.field_names:
                print('%s: %s'%(fldName, rec[fldName]))
             print
     else:
-        sys.stdout.write( "\t%s\t%s\t" % (os.path.getsize(dbfName),dbfName))
-        #for i1 in range(min(3,len(table))):
-        #    rec = table[i1]
-        for fldName in table.fieldNames:
-            sys.stdout.write('%s, '%(fldName))
-        print
+        sys.stdout.write( "%s\n"%str(table))
     table.close()
 
 
