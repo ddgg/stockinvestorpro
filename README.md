@@ -1,26 +1,3 @@
-# dbf schema
-## Static_Data_Files
-
-here store the concerned fundametal data
-
-* si_ci.dbf company info, company code, ticker, name address etc
-* si_date.dbf exact date of the period Y1, Y2 ... Y7 etc
-* si_bsa.dbf annual balance sheet
-* si_bsq.dbf quarterly balance sheet
-* si_cfa.dbf annually cash flow statement
-* si_cfq.dbf quarterly cash flow statement
-* SI_DOW.DBF dow index abbreviation code
-* SI_EXCHG.DBF exchange code
-* si_isa.dbf annually income statement
-* si_isq.dbf quauterly income statement
-* SI_MGDSC.DBF industry/sector code and description
-## Dynamic_Data_Files
-
-here store the price data files
-
-* si_psda.dbf yearly price data, including past 7 year end's price, high, low, volume
-* si_psdc.dbf monthly price data, past 120 month's closing price
-
 # extract stock invester pro updates exe
 
 This is the steps I used to automatically process sip installshield files from aaii.com, the target is to automatically extract dbf from sip update installshield exe, and import into database.
@@ -84,3 +61,31 @@ for i in `ls -1 fullupdate200*|sort -r`; do ~/trade/sip/dbf2archive.sh $i;done
 119M    ./20061110
 
 these are the incomplete extractions and their size
+
+122G as of 20050520
+# put dbf into sqlite for easy query
+## dbf schema
+### Static_Data_Files
+
+here store the concerned fundametal data
+
+* si_ci.dbf company info, company code, ticker, name address etc
+* si_date.dbf exact date of the period Y1, Y2 ... Y7 etc
+* si_bsa.dbf annual balance sheet
+* si_bsq.dbf quarterly balance sheet
+* si_cfa.dbf annually cash flow statement
+* si_cfq.dbf quarterly cash flow statement
+* SI_DOW.DBF dow index abbreviation code
+* SI_EXCHG.DBF exchange code
+* si_isa.dbf annually income statement
+* si_isq.dbf quauterly income statement
+* SI_MGDSC.DBF industry/sector code and description
+### Dynamic_Data_Files
+
+here store the price data files
+
+* si_psda.dbf yearly price data, including past 7 year end's price, high, low, volume
+* si_psdc.dbf monthly price data, past 120 month's closing price
+
+http://www.dbf2002.com/dbf-file-format.html
+

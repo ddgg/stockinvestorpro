@@ -20,9 +20,9 @@ fi
 targetdir="/f/sip/$fdate/"
 if [ -d $targetdir ]; then
     echo "target dir $targetdir exists!" >&2
-    exit 1
+else
+    mkdir $targetdir
 fi
-mkdir $targetdir
 rm $workdir/1.exe
 cp $1 $workdir/1.exe
 cd $workdir
@@ -45,4 +45,6 @@ if [[ $fntype -eq 0 && ! -d "$cabdir/Static_Data_Files" ]]; then
     echo "unshield error $exe" >&2
     exit 1
 fi
-find $workdir -iname si*.dbf | xargs -I '{}' mv '{}' $targetdir
+#find $workdir -iname si*.dbf -o -iname si*.fpt| xargs -I '{}' mv '{}' $targetdir
+# first time missed memo file, this is one time run to add fpt to archieve dir
+find $workdir -iname si*.fpt | xargs -I '{}' mv '{}' $targetdir
