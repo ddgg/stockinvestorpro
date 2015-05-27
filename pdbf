@@ -17,6 +17,7 @@ group.add_argument("-d", "--dump", action="store_true", help="dump table")
 group.add_argument("-s", "--sqlite", metavar='DB', help="write to sqlite database file DB")
 parser.add_argument("-F", "--force", action="store_true", help="overwrites existing table in sqlite database")
 parser.add_argument("-v", "--verbose", action="store_true")
+parser.add_argument("-c", "--concat", action="store_true", help="put different dbfs in same table")
 parser.add_argument("-i", "--ignore-errors", action="store_true", help="tell DBF library to ignore typecasting errors")
 parser.add_argument("-f", "--fields", help="only use field number n")
 parser.add_argument('infiles', metavar='DBF', nargs='+', help="input files in visual foxpro format")
@@ -48,8 +49,10 @@ def run(dbfName):
     global conn, fields
     table = dbf.VfpTable(dbfName, codepage='utf8')
     table.open()
-    
+
     if not args.fields: fields = range(len(table.field_names))
+
+
     if args.verbose: print "--> " + dbfName + " <--"
     if args.table:
         for fld in fields:
@@ -63,13 +66,21 @@ def run(dbfName):
     elif args.pretty:
         out = [ table.field_names ]
         for el in table:
-            out.append([ unicode(s).encode('utf-8').strip() for s in el ])
+            out.append([unicode(s).encode('utf-8').strip() for s in el ])
         print_table(out)
         
     elif args.sqlite:
-        netto_name = re.sub('[^A-Za-z0-9]', '_', dbfName).strip('_')
+        tname = ''
+        fdate = ''
+        if args.concat:
+            fparts = re.split('[\.\/]', dbfName)
+            fdate=fparts[2]
+            tname=fparts[3]
+            if not (re.match("[0-9]+", fdate) and re.match("^si_.*", tname)):
+                raise Exception("concat %s date and name error: %s %s"%(dbfName, fdate, tname))
+        netto_name = tname if args.concat else re.sub('[^A-Za-z0-9]', '_', dbfName).strip('_')
         print "Importing %s into table %s ..." % (dbfName, netto_name)
-        cr_stat = "CREATE TABLE IF NOT EXISTS `%s` (`%s`)" % (netto_name, '`,`'.join([table.field_names[f] for f in fields]))
+        cr_stat = "CREATE TABLE IF NOT EXISTS %s (%s%s)" % (netto_name, 'date,' if args.concat else '', ",".join([table.field_names[f] for f in fields])) 
         if args.force: conn.execute('DROP TABLE IF EXISTS `%s` ' % (netto_name))
         try:
             conn.execute(cr_stat)
@@ -78,9 +89,8 @@ def run(dbfName):
             print "You might want to try the --force option."
             raise e
         
-        
         for el in table:
-            ins_stat = "INSERT INTO `%s` VALUES ('%s')" % (netto_name, "','".join([ unicode(el[f]).encode('utf-8').strip().replace("'","''") for f in fields ]))
+            ins_stat = "INSERT INTO %s VALUES (%s'%s')" % (netto_name, "'"+fdate+"'," if args.concat else "", "','".join([el[f].encode('utf-8',errors='ignore').strip().replace("'","''") for f in fields ]))
             if args.verbose: print "sqlite: executing: %s" % ins_stat
             conn.execute(ins_stat)
         

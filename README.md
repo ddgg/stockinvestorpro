@@ -89,3 +89,10 @@ here store the price data files
 
 http://www.dbf2002.com/dbf-file-format.html
 
+## support table
+## si_ci company infomation? companyid vs ticker
+```
+cd /f/sip/ # must in this folder, code use fullpath to extract date and table names
+find . -name si_ci.dbf|xargs python ~/cr48/trade/sip/pdbf -c -f 0,1,2,3 -s ~/1.db
+```
+## 
