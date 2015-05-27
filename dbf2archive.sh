@@ -45,6 +45,6 @@ if [[ $fntype -eq 0 && ! -d "$cabdir/Static_Data_Files" ]]; then
     echo "unshield error $exe" >&2
     exit 1
 fi
-#find $workdir -iname si*.dbf -o -iname si*.fpt| xargs -I '{}' mv '{}' $targetdir
+find $workdir -iname si*.dbf -o -iname si*.fpt| xargs -I '{}' mv '{}' $targetdir
 # first time missed memo file, this is one time run to add fpt to archieve dir
-find $workdir -iname si*.fpt | xargs -I '{}' mv '{}' $targetdir
+#find $workdir -iname si*.fpt | xargs -I '{}' mv '{}' $targetdir

@@ -6,10 +6,11 @@ import os
 import sqlite3
 import argparse
 import re
+import pdb
 parser = argparse.ArgumentParser(description="read and convert visual foxpro database files")
 group = parser.add_mutually_exclusive_group()
 #group.add_argument("-f", "--fields", action="store_true", help="display field names")
-group.add_argument("-f", "--info", action="store_true", help="display dbf info")
+group.add_argument("-n", "--info", action="store_true", help="display dbf info")
 group.add_argument("-p", "--pretty", action="store_true", help="display pretty-printed table")
 group.add_argument("-t", "--table", action="store_true", help="display tab-separated table")
 group.add_argument("-d", "--dump", action="store_true", help="dump table")
@@ -17,13 +18,16 @@ group.add_argument("-s", "--sqlite", metavar='DB', help="write to sqlite databas
 parser.add_argument("-F", "--force", action="store_true", help="overwrites existing table in sqlite database")
 parser.add_argument("-v", "--verbose", action="store_true")
 parser.add_argument("-i", "--ignore-errors", action="store_true", help="tell DBF library to ignore typecasting errors")
+parser.add_argument("-f", "--fields", help="only use field number n")
 parser.add_argument('infiles', metavar='DBF', nargs='+', help="input files in visual foxpro format")
 args = parser.parse_args()
 
 conn = None
 
 def onIni():
-    global conn
+    global conn, fields
+    if args.fields: fields = map(int, args.fields.split(","))
+#    pdb.set_trace()
     if args.sqlite:
         print "sqlite: Opening db %s ..." % (args.sqlite)
         conn = sqlite3.connect(args.sqlite)
@@ -41,30 +45,31 @@ def onIni():
 
 
 def run(dbfName):
-    global conn
-    table = dbf.VfpTable(dbfName)
+    global conn, fields
+    table = dbf.VfpTable(dbfName, codepage='utf8')
     table.open()
     
+    if not args.fields: fields = range(len(table.field_names))
     if args.verbose: print "--> " + dbfName + " <--"
     if args.table:
-        for fldName in table.field_names:
-            sys.stdout.write('%s\t'%(fldName))
-        print table[1][1]
+        for fld in fields:
+            sys.stdout.write('%s\t'%(table.field_names[fld]))
+        print "-------------"
         for rec in table[:min(2, len(table))]:
-            for fldName in table.field_names:
-                sys.stdout.write('%s\t'%(rec[fldName]))
+            for fld in fields:
+                sys.stdout.write('%s\t'%(rec[fld]))
             print
             
     elif args.pretty:
         out = [ table.field_names ]
-#        for el in table:
-#            out.append([ str(s).encode('ascii', 'ignore').decode('ascii').strip() for s in el ])
+        for el in table:
+            out.append([ unicode(s).encode('utf-8').strip() for s in el ])
         print_table(out)
         
     elif args.sqlite:
         netto_name = re.sub('[^A-Za-z0-9]', '_', dbfName).strip('_')
         print "Importing %s into table %s ..." % (dbfName, netto_name)
-        cr_stat = "CREATE TABLE `%s` (`%s`)" % (netto_name, '`,`'.join(table.field_names))
+        cr_stat = "CREATE TABLE IF NOT EXISTS `%s` (`%s`)" % (netto_name, '`,`'.join([table.field_names[f] for f in fields]))
         if args.force: conn.execute('DROP TABLE IF EXISTS `%s` ' % (netto_name))
         try:
             conn.execute(cr_stat)
@@ -75,15 +80,15 @@ def run(dbfName):
         
         
         for el in table:
-            ins_stat = "INSERT INTO `%s` VALUES ('%s')" % (netto_name, "','".join([ str(s).strip().replace("'","''") for s in el ]))
+            ins_stat = "INSERT INTO `%s` VALUES ('%s')" % (netto_name, "','".join([ unicode(el[f]).encode('utf-8').strip().replace("'","''") for f in fields ]))
             if args.verbose: print "sqlite: executing: %s" % ins_stat
             conn.execute(ins_stat)
         
     elif args.dump:
         print( "\t%s\t%s\t" % (os.path.getsize(dbfName),dbfName))
-        for rec in table[:min(3,len(table))]:
-            for fldName in table.field_names:
-               print('%s: %s'%(fldName, rec[fldName]))
+        for rec in table:
+            for fld in fields:
+               print('%s: %s'%(table.field_names[fld], rec[fld]))
             print
     else:
         sys.stdout.write( "%s\n"%str(table))
