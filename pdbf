@@ -80,17 +80,26 @@ def run(dbfName):
                 raise Exception("concat %s date and name error: %s %s"%(dbfName, fdate, tname))
         netto_name = tname if args.concat else re.sub('[^A-Za-z0-9]', '_', dbfName).strip('_')
         print "Importing %s into table %s ..." % (dbfName, netto_name)
-        cr_stat = "CREATE TABLE IF NOT EXISTS %s (%s%s)" % (netto_name, 'date,' if args.concat else '', ",".join([table.field_names[f] for f in fields])) 
-        if args.force: conn.execute('DROP TABLE IF EXISTS `%s` ' % (netto_name))
-        try:
-            conn.execute(cr_stat)
-        except Exception, e:
-            print "sqlite: Error creating table %s!" % netto_name
-            print "You might want to try the --force option."
-            raise e
-        
+
+        cur = conn.cursor()
+        cur.execute("PRAGMA table_info(%s)"%(netto_name))
+        fieldCount = len(cur.fetchall())
+        print "fieldcount of %s is %d"%(netto_name, fieldCount)
+
+        if fieldCount == 0:
+            cr_stat = "CREATE TABLE IF NOT EXISTS %s (%s%s)" % (netto_name, 'date,' if args.concat else '', ",".join([table.field_names[f] for f in fields])) 
+            if args.force: conn.execute('DROP TABLE IF EXISTS `%s` ' % (netto_name))
+            try:
+                conn.execute(cr_stat)
+            except Exception, e:
+                print "sqlite: Error creating table %s!" % netto_name
+                print "You might want to try the --force option."
+                raise e
+        elif fieldCount != len(table.field_names)+1:
+            raise Exception("table structure changed")
+
         for el in table:
-            ins_stat = "INSERT INTO %s VALUES (%s'%s')" % (netto_name, "'"+fdate+"'," if args.concat else "", "','".join([el[f].encode('utf-8',errors='ignore').strip().replace("'","''") for f in fields ]))
+            ins_stat = "INSERT INTO %s VALUES (%s'%s')" % (netto_name, "'"+fdate+"'," if args.concat else "", "','".join([str(el[f]).encode('utf-8',errors='ignore').strip().replace("'","''") for f in fields ]))
             if args.verbose: print "sqlite: executing: %s" % ins_stat
             conn.execute(ins_stat)
         
