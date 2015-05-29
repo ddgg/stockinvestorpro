@@ -1,15 +1,13 @@
 #!/usr/bin/env python
-#from dbf import VfpTable
+from dbf import VfpTable
 import dbf
 import sys
 import os
 import sqlite3
 import argparse
 import re
-import pdb
 parser = argparse.ArgumentParser(description="read and convert visual foxpro database files")
 group = parser.add_mutually_exclusive_group()
-#group.add_argument("-f", "--fields", action="store_true", help="display field names")
 group.add_argument("-n", "--info", action="store_true", help="display dbf info")
 group.add_argument("-p", "--pretty", action="store_true", help="display pretty-printed table")
 group.add_argument("-t", "--table", action="store_true", help="display tab-separated table")
@@ -25,17 +23,19 @@ args = parser.parse_args()
 
 conn = None
 
-def onIni():
+def on_init():
+    """ open sqlite db if -s and use run to process dbf"""
     global conn, fields
     if args.fields: fields = map(int, args.fields.split(","))
+#    import pdb
 #    pdb.set_trace()
     if args.sqlite:
         print "sqlite: Opening db %s ..." % (args.sqlite)
         conn = sqlite3.connect(args.sqlite)
     
     try:
-        for dbfName in args.infiles:
-            run(dbfName)
+        for dbf_name in args.infiles:
+            run(dbf_name)
     except sqlite3.Error as e:
         print "sqlite: " + e.args[0]
     finally:
@@ -45,15 +45,15 @@ def onIni():
             conn.close()
 
 
-def run(dbfName):
+def run(dbf_name):
     global conn, fields
-    table = dbf.VfpTable(dbfName, codepage='utf8')
+    table = dbf.VfpTable(dbf_name, codepage='utf8')
     table.open()
 
     if not args.fields: fields = range(len(table.field_names))
 
 
-    if args.verbose: print "--> " + dbfName + " <--"
+    if args.verbose: print "--> " + dbf_name + " <--"
     if args.table:
         for fld in fields:
             sys.stdout.write('%s\t'%(table.field_names[fld]))
@@ -70,23 +70,30 @@ def run(dbfName):
         print_table(out)
         
     elif args.sqlite:
-        tname = ''
-        fdate = ''
+        """ Important part is -c (concat) do not drop table, append records
+            from new dbf file into the existing table
+            if number of columns change, means new table structure is found
+            raise exception and exit"""
+        table_name = None
+        file_date = None
         if args.concat:
-            fparts = re.split('[\.\/]', dbfName)
-            fdate=fparts[2]
-            tname=fparts[3]
-            if not (re.match("[0-9]+", fdate) and re.match("^si_.*", tname)):
-                raise Exception("concat %s date and name error: %s %s"%(dbfName, fdate, tname))
-        netto_name = tname if args.concat else re.sub('[^A-Za-z0-9]', '_', dbfName).strip('_')
-        print "Importing %s into table %s ..." % (dbfName, netto_name)
+            filename_parts = re.split('[\.\/]', dbf_name)
+            #! HACK hard code position require file name ./20050522/si_ci.dbf
+            # result of find in the /f/sip/ directory
+            file_date = filename_parts[2] 
+            table_name = filename_parts[3]
+            if not (re.match("[0-9]+", file_date) and re.match("^si_.*", table_name)):
+                raise Exception("concat %s date and name error: %s %s"%(dbf_name, file_date, table_name))
+        netto_name = table_name if args.concat else re.sub('[^A-Za-z0-9]', '_', dbf_name).strip('_')
+        print "Importing %s into table %s ..." % (dbf_name, netto_name)
 
         cur = conn.cursor()
         cur.execute("PRAGMA table_info(%s)"%(netto_name))
-        fieldCount = len(cur.fetchall())
-        print "fieldcount of %s is %d"%(netto_name, fieldCount)
+        field_count = len(cur.fetchall())
+        print "fieldcount of %s is %d"%(netto_name, field_count)
 
-        if fieldCount == 0:
+        if field_count == 0:
+            """ table does not exist"""
             cr_stat = "CREATE TABLE IF NOT EXISTS %s (%s%s)" % (netto_name, 'date,' if args.concat else '', ",".join([table.field_names[f] for f in fields])) 
             if args.force: conn.execute('DROP TABLE IF EXISTS `%s` ' % (netto_name))
             try:
@@ -95,16 +102,18 @@ def run(dbfName):
                 print "sqlite: Error creating table %s!" % netto_name
                 print "You might want to try the --force option."
                 raise e
-        elif fieldCount != len(table.field_names)+1:
+        elif field_count != len(table.field_names)+1:
+            """ table structure changed """
             raise Exception("table structure changed")
 
         for el in table:
-            ins_stat = "INSERT INTO %s VALUES (%s'%s')" % (netto_name, "'"+fdate+"'," if args.concat else "", "','".join([str(el[f]).encode('utf-8',errors='ignore').strip().replace("'","''") for f in fields ]))
+            #! HACK dbf module _v2.py line 3887 replace \xc2 \xa0 with ''
+            ins_stat = "INSERT INTO %s VALUES (%s'%s')" % (netto_name, "'"+file_date+"'," if args.concat else "", "','".join([str(el[f]).encode('utf-8',errors='ignore').strip().replace("'","''") for f in fields ]))
             if args.verbose: print "sqlite: executing: %s" % ins_stat
             conn.execute(ins_stat)
         
     elif args.dump:
-        print( "\t%s\t%s\t" % (os.path.getsize(dbfName),dbfName))
+        print( "\t%s\t%s\t" % (os.path.getsize(dbf_name),dbf_name))
         for rec in table:
             for fld in fields:
                print('%s: %s'%(table.field_names[fld], rec[fld]))
@@ -147,5 +156,5 @@ def print_table(rows):
     # - print the separator
     print('+-'+ '-+-'.join( '-' * width for width in widths ) +'-+')
 
-onIni()
+on_init()
 
