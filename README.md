@@ -95,16 +95,43 @@ http://www.dbf2002.com/dbf-file-format.html
 cd /f/sip/ # must in this folder, code use fullpath to extract date and table names
 find . -name si_ci.dbf|xargs python ~/cr48/trade/sip/pdbf -c -f 0,1,2,3 -s ~/1.db
 ```
+for single update
+```
+cd /f/sip/ 
+python ~/cr48/trade/sip/pdbf -c -f 0,1,2,3 -s 1.db ./20150529/si_ci.dbf
+```
+
 ## si_date date filed _Y1...7 vs actual date
 
 ```
 cd /f/sip/ # must in this folder, code use fullpath to extract date and table names
-find . -name si_date.dbf|xargs python ~/cr48/trade/sip/pdbf -c -f 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 -s ~/1.db
+find . -name si_date.dbf|xargs python ~/cr48/trade/sip/pdbf -c -f 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 -s 1.db
+```
+```
+cd /f/sip/ 
+python ~/cr48/trade/sip/pdbf -c -f 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 -s 1.db ./20150529/si_date.dbf
 ```
 ## fundamental data
 ### si_bsq.dbf
 table structure change with the time, so find result need to be order reverse time. and pdbf will abonden dbf if structure change, need more robust logic, like create new table.
 ```
 cd /f/sip/ # must in this folder, code use fullpath to extract date and table names
-find . -name si_bsq.dbf|sort -r|head -200|xargs python ~/cr48/trade/sip/pdbf -c -s ~/1.db
+find . -name si_bsq.dbf|sort -r|head -200|xargs python ~/cr48/trade/sip/pdbf -c -s 1.db
+```
+
+```
+cd /f/sip/ 
+python ~/cr48/trade/sip/pdbf -c -s 1.db ./20150529/si_bsq.dbf
+python ~/cr48/trade/sip/pdbf -c -s 1.db ./20150529/si_isq.dbf
+python ~/cr48/trade/sip/pdbf -c -s 1.db ./20150529/si_cfq.dbf
+```
+## indeces
+```sql
+create index idx_ci_dateid on si_ci(date, company_id);
+create index idx_date_dateid on si_date(date, company_id);
+
+create index idx_bs_dateid on si_bsq(date, company_id);
+create index idx_is_dateid on si_isq(date, company_id);
+create index idx_cf_dateid on si_cfq(date, company_id);
+
 ```

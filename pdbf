@@ -102,7 +102,7 @@ def run(dbf_name):
                 print "sqlite: Error creating table %s!" % netto_name
                 print "You might want to try the --force option."
                 raise e
-        elif field_count != len(table.field_names)+1:
+        elif field_count != len(fields)+1:
             """ table structure changed """
             raise Exception("table structure changed")
 
